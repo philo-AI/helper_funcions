@@ -177,3 +177,20 @@ def calculate_results(y_true, y_pred):
                   "recall": model_recall,
                   "f1": model_f1}
   return model_results
+
+def time_preprocces(dataframe,cost_name,tts):
+    timesteps = dataframe.index.to_numpy()
+    prices = dataframe[str(cost_name)].to_numpy()
+    def SplitTimeSeries(price=prices, timestep=timesteps,tts=tts):
+      split_size = int(tts * len(price))
+      X_train, y_train = timestep[:split_size], price[:split_size]
+      X_test, y_test = timestep[split_size:], price[split_size:]
+      return X_train, y_train,X_test,y_test
+
+def plot_time_series(timesteps, values, format='.', start=0, end=None, label=None):
+    plt.plot(timesteps[start:end], values[start:end], format, label=label)
+    plt.xlabel("Time")
+    plt.ylabel("BTC Price")
+    if label:
+      plt.legend(fontsize=14)
+    plt.grid(True)
