@@ -197,4 +197,9 @@ def plot_time_series(timesteps, values, format='.', start=0, end=None, label=Non
     plt.ylabel("BTC Price")
     if label:
       plt.legend(fontsize=14)
-    plt.grid(True)
+    plt.grid(True)    plt.grid(True)
+
+  mae = tf.reduce_mean(tf.abs(y_true - y_pred))
+  return mae / mae_naive_no_season
+          "mape": mape.numpy(),
+          "mase": mase.numpy()}
