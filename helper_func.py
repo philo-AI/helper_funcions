@@ -1,6 +1,9 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import datetime
+import pandas as pd
+import numpy as np
+import sklearn 
 def image_imports():
         a = 'import numpy as np'
         b='import pandas as pd'
@@ -183,9 +186,10 @@ def time_preprocces(dataframe,cost_name,tts):
     prices = dataframe[str(cost_name)].to_numpy()
     def SplitTimeSeries(price=prices, timestep=timesteps,tts=tts):
       split_size = int(tts * len(price))
-      X_train, y_train = timestep[:split_size], price[:split_size]
-      X_test, y_test = timestep[split_size:], price[split_size:]
-      return X_train, y_train,X_test,y_test
+      x_train, y_train = timestep[:split_size], price[:split_size]
+      x_test, y_test = timestep[split_size:], price[split_size:]
+      print (f"the vals are x_train = {x_train},x_test = {x_test},y_train = {y_train},y_test = {y_test}")
+      return x_train, y_train,x_test,y_test
 
 def plot_time_series(timesteps, values, format='.', start=0, end=None, label=None):
     plt.plot(timesteps[start:end], values[start:end], format, label=label)
