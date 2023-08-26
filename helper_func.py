@@ -211,13 +211,14 @@ def evaluate_preds(y_true, y_pred):
   mse = tf.keras.metrics.mean_squared_error(y_true, y_pred)
   rmse = tf.sqrt(mse)
   mape = tf.keras.metrics.mean_absolute_percentage_error(y_true, y_pred)
-  def mean_absolute_scaled_error(y_true, y_pred):
-    mae = tf.reduce_mean(tf.abs(y_true - y_pred))
-    mae_naive_no_season = tf.reduce_mean(tf.abs(y_true[1:] - y_true[:-1])) 
+  def mean_absolute_scaled_error(y_trues, y_preds):
+    mae = tf.reduce_mean(tf.abs(y_trues - y_preds))
+    mae_naive_no_season = tf.reduce_mean(tf.abs(y_trues[1:] - y_trues[:-1])) 
     return mae / mae_naive_no_season
-  mase = mean_absolute_scaled_error(y_true, y_pred)
+  mase = mean_absolute_scaled_error(y_trues=y_true, y_preds=y_pred)
   return {"mae": mae.numpy(),
           "mse": mse.numpy(),
           "rmse": rmse.numpy(),
           "mape": mape.numpy(),
           "mase": mase.numpy()}
+
