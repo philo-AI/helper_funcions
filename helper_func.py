@@ -222,3 +222,21 @@ def evaluate_preds(y_true, y_pred):
           "mape": mape.numpy(),
           "mase": mase.numpy()}
 
+def preproce_time_series(data,index):
+  input_data = data[index]
+  targets = data[index]
+  dataset = tf.keras.utils.timeseries_dataset_from_array(
+      input_data, targets, sequence_length=10)
+  for batch in dataset:
+    inputs, targets = batch
+    assert np.array_equal(inputs[0], data[index])
+    assert np.array_equal(targets[0], data[index])
+    break
+  print(f'shape of windows is {inputs.shape}, shape of horizon is {targets.shape}')
+  i = input('do you wanna see the horizon and windo [y]es ,[n]o')
+  if i == 'y'.casefold():
+     print(f'windows {inputs} and horizons {targets}')
+  else:
+     pass
+  return inputs,targets
+  
