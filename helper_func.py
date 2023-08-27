@@ -180,16 +180,22 @@ def calculate_results(y_true, y_pred):
                   "recall": model_recall,
                   "f1": model_f1}
   return model_results
-
-def time_preprocces(dataframe,cost_name,tts):
-    timesteps = dataframe.index.to_numpy()
-    prices = dataframe[str(cost_name)].to_numpy()
-    def SplitTimeSeries(price=prices, timestep=timesteps,tts=tts):
-      split_size = int(tts * len(price))
-      x_train, y_train = timestep[:split_size], price[:split_size]
-      x_test, y_test = timestep[split_size:], price[split_size:]
-      print (f"the vals are x_train = {x_train},x_test = {x_test},y_train = {y_train},y_test = {y_test}")
-      return x_train, y_train,x_test,y_test
+def preproce_time_series(data,index,tts):
+  input_data = data[index]
+  targets = data[index]
+  dataset = tf.keras.utils.timeseries_dataset_from_array(
+      input_data, targets, sequence_length=10)
+  for batch in dataset:
+    inputs, targets = batch
+    assert np.array_equal(inputs[0], data[index])
+    assert np.array_equal(targets[0], data[index])
+    break
+  split_size = int(tts * len(inputs))
+  x_train, y_train = inputs[:split_size], targets[:split_size]
+  x_test, y_test = inputs[split_size:], targets[split_size:]
+  print(f"this function turns data to a ready to train preproccesed stuff x_train = {x_train.shape}, y_train = {y_train.shape}, x_test= {x_test.shape}, y_test = {y_test.shape}")
+  print(f"FYI: X is the windows while Y is the horizon")
+  return x_train, y_train,x_test,y_test
 
 def plot_time_series(timesteps, values, format='.', start=0, end=None, label=None):
     plt.plot(timesteps[start:end], values[start:end], format, label=label)
@@ -222,21 +228,4 @@ def evaluate_preds(y_true, y_pred):
           "mape": mape.numpy(),
           "mase": mase.numpy()}
 
-def preproce_time_series(data,index):
-  input_data = data[index]
-  targets = data[index]
-  dataset = tf.keras.utils.timeseries_dataset_from_array(
-      input_data, targets, sequence_length=10)
-  for batch in dataset:
-    inputs, targets = batch
-    assert np.array_equal(inputs[0], data[index])
-    assert np.array_equal(targets[0], data[index])
-    break
-  print(f'shape of windows is {inputs.shape}, shape of horizon is {targets.shape}')
-  i = input('do you wanna see the horizon and windo [y]es ,[n]o')
-  if i == 'y'.casefold():
-     print(f'windows {inputs} and horizons {targets}')
-  else:
-     pass
-  return inputs,targets
   
