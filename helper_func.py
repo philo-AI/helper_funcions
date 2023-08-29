@@ -234,20 +234,6 @@ def evaluate_preds(y_true, y_pred):
           "mase": mase.numpy()}
   
 def download_and_resize_image(url, new_width, new_height):  
-    
-    '''
-    Fetches an image online, resizes it and saves it locally.
-    
-    Args:
-        url (string) -- link to the image
-        new_width (int) -- size in pixels used for resizing the width of the image
-        new_height (int) -- size in pixels used for resizing the length of the image
-        
-    Returns:
-        (string) -- path to the saved image
-    '''
-    
-    
     # create a temporary file ending with ".jpg"
     _, filename = tempfile.mkstemp(suffix=".jpg")
     
@@ -276,44 +262,50 @@ def download_and_resize_image(url, new_width, new_height):
     
     return filename
 
-def download_and_resize_image(url, new_width=256, new_height=256):
+def load_img(path):
     '''
-    Fetches an image online, resizes it and saves it locally.
+    Loads a JPEG image and converts it to a tensor.
     
     Args:
-        url (string) -- link to the image
-        new_width (int) -- size in pixels used for resizing the width of the image
-        new_height (int) -- size in pixels used for resizing the length of the image
-        
+        path (string) -- path to a locally saved JPEG image
+    
     Returns:
-        (string) -- path to the saved image
+        (tensor) -- an image tensor
     '''
     
+    # read the file
+    img = tf.io.read_file(path)
     
-    # create a temporary file ending with ".jpg"
-    _, filename = tempfile.mkstemp(suffix=".jpg")
+    # convert to a tensor
+    img = tf.image.decode_jpeg(img, channels=3)
     
-    # opens the given URL
-    response = six.moves.urllib.request.urlopen(url)
+    return img
+
+
+def run_detector(detector, path):
+    '''
+    Runs inference on a local file using an object detection model.
     
-    # reads the image fetched from the URL
-    image_data = response.read()
+    Args:
+        detector (model) -- an object detection model loaded from TF Hub
+        path (string) -- path to an image saved locally
+    '''
     
-    # puts the image data in memory buffer
-    image_data = BytesIO(image_data)
+    # load an image tensor from a local file path
+    img = load_img(path)
+
+    # add a batch dimension in front of the tensor
+    converted_img  = tf.image.convert_image_dtype(img, tf.float32)[tf.newaxis, ...]
     
-    # opens the image
-    pil_image = Image.open(image_data)
-    
-    # resizes the image. will crop if aspect ratio is different.
-    pil_image = ImageOps.fit(pil_image, (new_width, new_height), Image.ANTIALIAS)
-    
-    # converts to the RGB colorspace
-    pil_image_rgb = pil_image.convert("RGB")
-    
-    # saves the image to the temporary file created earlier
-    pil_image_rgb.save(filename, format="JPEG", quality=90)
-    
-    print("Image downloaded to %s." % filename)
-    
-    return filename
+    # run inference using the model
+    result = detector(converted_img)
+
+    # save the results in a dictionary
+    result = {key:value.numpy() for key,value in result.items()}
+
+    # print results
+    print("Found %d objects." % len(result["detection_scores"]))
+
+    print(result["detection_scores"])
+    print(result["detection_class_entities"])
+    print(result["detection_boxes"])
