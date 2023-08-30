@@ -385,3 +385,19 @@ def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, de
   else:
     return fashgan.fit(training_data,epochs=epochs,callbacks=[Callbacks],validation_data=val_data)
   
+
+def gan_preproccesing(data):
+  def scale_images(data): 
+    image = data['image']
+    return image / 255
+  # Running the dataset through the scale_images preprocessing step
+  ds = data.map(scale_images) 
+  # Cache the dataset for that batch 
+  ds = data.cache()
+  # Shuffle it up 
+  ds = data.shuffle(60000)
+  # Batch into 128 images per sample
+  ds = data.batch(128)
+  # Reduces the likelihood of bottlenecking 
+  ds = data.prefetch(64)
+  return ds
