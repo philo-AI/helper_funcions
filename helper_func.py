@@ -373,7 +373,7 @@ def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, de
           ggrad = g_tape.gradient(total_g_loss, self.generator.trainable_variables)
           self.g_opt.apply_gradients(zip(ggrad, self.generator.trainable_variables))
           
-          return {"d_loss":total_d_loss, "g_loss":total_g_loss}
+          return {"detector_loss":total_d_loss, "generator_loss":total_g_loss}
   fashgan = GAN_MODEL(generator, detector)
   fashgan.compile(genrator_optimezer, detector_optimizer, gen_loss, detector_loss)
   if Callbacks == None and val_data==  None:
