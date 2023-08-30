@@ -311,7 +311,7 @@ def run_detector(detector, path):
     print(result["detection_class_entities"])
     print(result["detection_boxes"])
 
-def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, detector_loss,generator, detector,training_data,epochs,Callbacks=None):
+def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, detector_loss,generator, detector,training_data,epochs,Callbacks=None,val_data=None):
   class GAN_MODEL(ks.models.Model): 
       def __init__(self, generator, discriminator, *args, **kwargs):
           # Pass through args and kwargs to base class 
@@ -376,7 +376,12 @@ def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, de
           return {"d_loss":total_d_loss, "g_loss":total_g_loss}
   fashgan = GAN_MODEL(generator, detector)
   fashgan.compile(genrator_optimezer, detector_optimizer, gen_loss, detector_loss)
-  if Callbacks == None:
+  if Callbacks == None and val_data==  None:
     return fashgan.fit(training_data,epochs=epochs)
-  else:
+  elif Callbacks == None and val_data != None:
+    return fashgan.fit(training_data,epochs=epochs,validation_data=val_data)
+  elif Callbacks != None and val_data == None:
     return fashgan.fit(training_data,epochs=epochs,callbacks=[Callbacks])
+  else:
+    return fashgan.fit(training_data,epochs=epochs,callbacks=[Callbacks],validation_data=val_data)
+  
