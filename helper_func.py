@@ -311,7 +311,7 @@ def run_detector(detector, path):
     print(result["detection_class_entities"])
     print(result["detection_boxes"])
 
-def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, detector_loss,generator, detector,training_data,epochs,Callbacks=None,val_data=None):
+def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, detector_loss,generator, detector,training_data,epochs,input_shape,Callbacks=None,val_data=None):
   class GAN_MODEL(ks.models.Model): 
       def __init__(self, generator, discriminator, *args, **kwargs):
           # Pass through args and kwargs to base class 
@@ -334,7 +334,7 @@ def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, de
       def train_step(self, batch):
           # Get the data 
           real_images = batch
-          fake_images = self.generator(tf.random.normal((128, 128, 1)), training=False)
+          fake_images = self.generator(tf.random.normal((input_shape)), training=False)
           
           # Train the discriminator
           with tf.GradientTape() as d_tape: 
@@ -361,7 +361,7 @@ def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, de
           # Train the generator 
           with tf.GradientTape() as g_tape: 
               # Generate some new images
-              gen_images = self.generator(tf.random.normal((128,128,1)), training=True)
+              gen_images = self.generator(tf.random.normal((input_shape)), training=True)
                                           
               # Create the predicted labels
               predicted_labels = self.discriminator(gen_images, training=False)
@@ -376,6 +376,10 @@ def training_model_for_GANs(genrator_optimezer, detector_optimizer, gen_loss, de
           return {"detector_loss":total_d_loss, "generator_loss":total_g_loss}
   fashgan = GAN_MODEL(generator, detector)
   fashgan.compile(genrator_optimezer, detector_optimizer, gen_loss, detector_loss)
+  ## read before runing IF there are labels to your code (EG you loaded it from git hub or kaggle)
+  ## use this training_data = training_data.as_numpy_iterator().next()
+  ## and when your fitting use this
+  ## fashgan.fit(training_data[0].....)
   if Callbacks == None and val_data==  None:
     return fashgan.fit(training_data,epochs=epochs)
   elif Callbacks == None and val_data != None:
