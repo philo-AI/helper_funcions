@@ -423,3 +423,62 @@ def object_detection_preprocessing(model,train_data,test_data,val_data=None,batc
   mode.evaluate(test_data)
   mode.export(export_dir='.')
   return mode
+def getting_tfod():
+    import os
+    CUSTOM_MODEL_NAME = 'my_ssd_mobnet' 
+    PRETRAINED_MODEL_NAME = 'ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8'
+    PRETRAINED_MODEL_URL = 'http://download.tensorflow.org/models/object_detection/tf2/20200711/ssd_mobilenet_v2_fpnlite_320x320_coco17_tpu-8.tar.gz'
+    TF_RECORD_SCRIPT_NAME = 'generate_tfrecord.py'
+    LABEL_MAP_NAME = 'label_map.pbtxt'
+    paths = {
+      'WORKSPACE_PATH': os.path.join('Tensorflow', 'workspace'),
+      'SCRIPTS_PATH': os.path.join('Tensorflow','scripts'),
+      'APIMODEL_PATH': os.path.join('Tensorflow','models'),
+      'ANNOTATION_PATH': os.path.join('Tensorflow', 'workspace','annotations'),
+      'IMAGE_PATH': os.path.join('Tensorflow', 'workspace','images'),
+      'MODEL_PATH': os.path.join('Tensorflow', 'workspace','models'),
+      'PRETRAINED_MODEL_PATH': os.path.join('Tensorflow', 'workspace','pre-trained-models'),
+      'CHECKPOINT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME), 
+      'OUTPUT_PATH': os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'export'), 
+      'TFJS_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfjsexport'), 
+      'TFLITE_PATH':os.path.join('Tensorflow', 'workspace','models',CUSTOM_MODEL_NAME, 'tfliteexport'), 
+      'PROTOC_PATH':os.path.join('Tensorflow','protoc')
+    }
+    for path in paths.values():
+      if not os.path.exists(path):
+          if os.name == 'posix':
+              !mkdir -p {path}
+          if os.name == 'nt':
+              !mkdir {path}
+    if os.name=='nt':
+      !pip install wget
+      import os
+      import pathlib
+      import wget
+      if not os.path.exists(os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection')):
+        !git clone https://github.com/tensorflow/models {paths['APIMODEL_PATH']}
+      if os.name=='posix':  
+          !apt-get install protobuf-compiler
+          !cd Tensorflow/models/research && protoc object_detection/protos/*.proto --python_out=. && cp object_detection/packages/tf2/setup.py . && python -m pip install . 
+          
+      if os.name=='nt':
+          url="https://github.com/protocolbuffers/protobuf/releases/download/v3.15.6/protoc-3.15.6-win64.zip"
+          wget.download(url)
+          !move protoc-3.15.6-win64.zip {paths['PROTOC_PATH']}
+          !cd {paths['PROTOC_PATH']} && tar -xf protoc-3.15.6-win64.zip
+          os.environ['PATH'] += os.pathsep + os.path.abspath(os.path.join(paths['PROTOC_PATH'], 'bin'))   
+          !cd Tensorflow/models/research && protoc object_detection/protos/*.proto --python_out=. && copy object_detection\\packages\\tf2\\setup.py setup.py && python setup.py build && python setup.py install
+          !cd Tensorflow/models/research/slim && pip install -e . 
+          VERIFICATION_SCRIPT = os.path.join(paths['APIMODEL_PATH'], 'research', 'object_detection', 'builders', 'model_builder_tf2_test.py')
+      # Verify Installation
+      !pip install tensorflow --upgrade
+      import object_detection
+      if os.name =='posix':
+          !wget {PRETRAINED_MODEL_URL}
+          !mv {PRETRAINED_MODEL_NAME+'.tar.gz'} {paths['PRETRAINED_MODEL_PATH']}
+          !cd {paths['PRETRAINED_MODEL_PATH']} && tar -zxvf {PRETRAINED_MODEL_NAME+'.tar.gz'}
+      if os.name == 'nt':
+          wget.download(PRETRAINED_MODEL_URL)
+          !move {PRETRAINED_MODEL_NAME+'.tar.gz'} {paths['PRETRAINED_MODEL_PATH']}
+          !cd {paths['PRETRAINED_MODEL_PATH']} && tar -zxvf {PRETRAINED_MODEL_NAME+'.tar.gz'}
+getting_tfod()
